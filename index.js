@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
 // 定数の設定
-var LINE_CHANNEL_ACCESS_TOKEN = 'BfVeE9hrQON44TV3jC62dL79KB/657LJKj0NRVTLxfMJECniXokiUhNDJi7+euWci78Bax+KJUbDMqaWV9t/zMqcoDsj7XzTi4tWiLXvDg7Or2HWMEhMori47u18nOMl+eUbDkEL8Ru+aH74GNrSZgdB04t89/1O/w1cDnyilFU=';
+const LINE_CHANNEL_ACCESS_TOKEN = 'BfVeE9hrQON44TV3jC62dL79KB/657LJKj0NRVTLxfMJECniXokiUhNDJi7+euWci78Bax+KJUbDMqaWV9t/zMqcoDsj7XzTi4tWiLXvDg7Or2HWMEhMori47u18nOMl+eUbDkEL8Ru+aH74GNrSZgdB04t89/1O/w1cDnyilFU=';
 
 // -----------------------------------------------------------------------------
 // モジュールのインポート
@@ -39,10 +39,11 @@ app.post('/webhook', function(req, res, next){
             }
             var body = {
                 replyToken: event.replyToken,
-                messages: ['こんにちはー']
+                messages: [{
+                    type: 'text',
+                    text: 'こんにちはー'
+                }]
             }
-            console.log(body);
-            console.log(headers);
             var url = 'https://api.line.me/v2/bot/message/reply';
             request({
                 url: url,
@@ -50,8 +51,6 @@ app.post('/webhook', function(req, res, next){
                 headers: headers,
                 body: body,
                 json: true
-            }, function (error, response, body) {
-                (error) ? console.log(error) : console.log('Replied.');
             });
         }
     }
