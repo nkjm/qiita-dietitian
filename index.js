@@ -48,6 +48,8 @@ app.post('/webhook', function(req, res, next){
                 headers: headers,
                 body: body,
                 json: true
+            }, function (error, response, body) {
+                (error) ? console.log(error) : console.log('Replied.');
             });
         }
     }
