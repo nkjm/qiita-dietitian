@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
 // 定数の設定
-const LINE_CHANNEL_ACCESS_TOKEN = 'BfVeE9hrQON44TV3jC62dL79KB/657LJKj0NRVTLxfMJECniXokiUhNDJi7+euWci78Bax+KJUbDMqaWV9t/zMqcoDsj7XzTi4tWiLXvDg7Or2HWMEhMori47u18nOMl+eUbDkEL8Ru+aH74GNrSZgdB04t89/1O/w1cDnyilFU=';
+var LINE_CHANNEL_ACCESS_TOKEN = 'BfVeE9hrQON44TV3jC62dL79KB/657LJKj0NRVTLxfMJECniXokiUhNDJi7+euWci78Bax+KJUbDMqaWV9t/zMqcoDsj7XzTi4tWiLXvDg7Or2HWMEhMori47u18nOMl+eUbDkEL8Ru+aH74GNrSZgdB04t89/1O/w1cDnyilFU=';
 
 // -----------------------------------------------------------------------------
 // モジュールのインポート
@@ -41,6 +41,8 @@ app.post('/webhook', function(req, res, next){
                 replyToken: event.replyToken,
                 messages: ['こんにちはー']
             }
+            console.log(body);
+            console.log(headers);
             var url = 'https://api.line.me/v2/bot/message/reply';
             request({
                 url: url,
