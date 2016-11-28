@@ -7,7 +7,8 @@ var app = express();
 
 // -----------------------------------------------------------------------------
 // ミドルウェア設定
-app.use(bodyParser.json());
+// リクエストのbodyをJSONとしてパースし、req.bodyからそのデータにアクセス可能にします。
+// app.use(bodyParser.json());
 
 // -----------------------------------------------------------------------------
 // Webサーバー設定
@@ -25,5 +26,5 @@ app.get('/', function(req, res, next){
 
 app.post('/webhook', function(req, res, next){
     res.status(200).end();
-    console.log(req.body);
+    console.log(req);
 });
