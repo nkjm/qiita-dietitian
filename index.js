@@ -1,12 +1,7 @@
 // -----------------------------------------------------------------------------
-// 定数の設定
-const LINE_CHANNEL_ACCESS_TOKEN = 'BfVeE9hrQON44TV3jC62dL79KB/657LJKj0NRVTLxfMJECniXokiUhNDJi7+euWci78Bax+KJUbDMqaWV9t/zMqcoDsj7XzTi4tWiLXvDg7Or2HWMEhMori47u18nOMl+eUbDkEL8Ru+aH74GNrSZgdB04t89/1O/w1cDnyilFU=';
-
-// -----------------------------------------------------------------------------
 // モジュールのインポート
 var express = require('express');
 var bodyParser = require('body-parser');
-var request = require('request');
 var mecab = require('mecabaas-client');
 var shokuhin = require('shokuhin-db');
 var memory = require('memory-cache');
@@ -74,6 +69,10 @@ app.post('/webhook', function(req, res, next){
                         }
                     }
 
+                    /*
+                     * もし確認事項がなければ、合計カロリーを返信して終了。
+                     * もし確認すべき食品があれば、質問して現在までの状態を記憶に保存。
+                     */
                     if (botMemory.toConfirmFoodList.length == 0 && botMemory.confirmedFoodList.length > 0){
                         // 確認事項はないので、確定した食品のカロリーの合計を返信して終了。
                         dietitian.replyTotalCalorie(event.replyToken, botMemory.confirmedFoodList);
@@ -100,6 +99,10 @@ app.post('/webhook', function(req, res, next){
             // 回答された食品を確定リストに追加
             botMemory.confirmedFoodList.push(answeredFood);
 
+            /*
+             * もし確認事項がなければ、合計カロリーを返信して終了。
+             * もし確認すべき食品があれば、質問して現在までの状態を記憶に保存。
+             */
             if (botMemory.toConfirmFoodList.length == 0 && botMemory.confirmedFoodList.length > 0){
                 // 確認事項はないので、確定した食品のカロリーの合計を返信して終了。
                 dietitian.replyTotalCalorie(event.replyToken, botMemory.confirmedFoodList);
