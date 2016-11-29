@@ -44,13 +44,14 @@ app.post('/webhook', function(req, res, next){
                             foodList.push(elem);
                         }
                     }
-                    var gotAllNutrition = [];
                     if (foodList.length > 0){
                         for (var food of foodList){
                             shokuhin.getNutrition(food[0])
                             .then(
                                 function(nutritionList){
                                     if (nutritionList.length == 1){
+                                        console.log('Going to confirm if the food is ' + nutritionList[0].food_name);
+
                                         // この食品で正しいか確認する。
                                         var headers = {
                                             'Content-Type': 'application/json',
@@ -65,8 +66,8 @@ app.post('/webhook', function(req, res, next){
                                                     type: 'confirm',
                                                     text: nutritionList[0].food_name + 'でよろしいですか？',
                                                     actions: [
-                                                        { type: 'postback', label: 'はい', data: { answer: 'yes', nutrition: JSON.stringify(nutritionList[0])} },
-                                                        { type: 'postback', label: 'いいえ', data: { answer: 'no'} }
+                                                        { type: 'postback', label: 'はい', data: JSON.stringify({ answer: 'yes', nutrition: nutritionList[0] }) },
+                                                        { type: 'postback', label: 'いいえ', data: JSON.stringify({ answer: 'no'}) }
                                                     ]
                                                 }
                                             }]
@@ -80,6 +81,8 @@ app.post('/webhook', function(req, res, next){
                                             json: true
                                         });
                                     } else if (nutritionList.length > 1){
+                                        console.log('Going to ask which food the user had');
+
                                         // どの食品が正しいか確認する。
                                         var headers = {
                                             'Content-Type': 'application/json',
@@ -101,7 +104,7 @@ app.post('/webhook', function(req, res, next){
                                             body.messages[0].template.actions.push({
                                                 type: 'postback',
                                                 label: nutrition.food_name,
-                                                data: { answer: 'food', nutrition: JSON.stringify(nutrition) }
+                                                data: JSON.stringify({ answer: 'food', nutrition: nutrition })
                                             });
                                             if (body.messages[0].template.actions.length == 4){
                                                 break;
