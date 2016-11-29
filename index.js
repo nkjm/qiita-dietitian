@@ -102,9 +102,6 @@ app.post('/webhook', function(req, res, next){
                             body: body,
                             json: true
                         });
-
-                        // Botの記憶に保存
-                        memory.put(event.source.userId, botMemory);
                     } else if (botMemory.toConfirmFoodList.length > 0){
                         console.log('Going to ask which food the user had');
 
@@ -129,7 +126,7 @@ app.post('/webhook', function(req, res, next){
                             body.messages[0].template.actions.push({
                                 type: 'postback',
                                 label: food.food_name,
-                                data: JSON.stringify({ answer: 'food', food: food })
+                                data: JSON.stringify(food)
                             });
 
                             // 現在Templateメッセージに付加できるactionは4つまでのため、5つ以上の候補はカット。
@@ -156,90 +153,93 @@ app.post('/webhook', function(req, res, next){
                     }
                 }
             );
+        } else if (event.type == 'postback'){
+            // リクエストからデータを抽出。
+            var answeredFood = JSON.parse(event.postback.data);
+
+            // 記憶を取り出す。
+            var botMemory = memory.get(event.source.userId);
+
+            botMemory.confirmedFoodList.push(answeredFood);
+
+            if (botMemory.toConfirmFoodList.length == 0 && botMemory.confirmedFoodList.length > 0){
+                console.log('Going to reply the total calorie.');
+
+                // 確認事項はないので、確定した食品のカロリーの合計を返信して終了。
+                var foodListStr = "";
+                var totalCalorie = 0;
+                for (var food of botMemory.confirmedFoodList){
+                    totalCalorie += food.calorie;
+                }
+
+                var headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
+                }
+                var body = {
+                    replyToken: event.replyToken,
+                    messages: [{
+                        type: 'text',
+                        text: 'カロリーは合計' + totalCalorie + 'kcalです！'
+                    }]
+                }
+                var url = 'https://api.line.me/v2/bot/message/reply';
+                request({
+                    url: url,
+                    method: 'POST',
+                    headers: headers,
+                    body: body,
+                    json: true
+                });
+            } else if (botMemory.toConfirmFoodList.length > 0){
+                console.log('Going to ask which food the user had');
+
+                // どの食品が正しいか確認する。
+                var headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
+                }
+                var body = {
+                    replyToken: event.replyToken,
+                    messages: [{
+                        type: 'template',
+                        altText: 'どの食品が最も近いですか？',
+                        template: {
+                            type: 'buttons',
+                            text: 'どの食品が最も近いですか？',
+                            actions: []
+                        }
+                    }]
+                }
+                for (var food of botMemory.toConfirmFoodList[0]){
+                    body.messages[0].template.actions.push({
+                        type: 'postback',
+                        label: food.food_name,
+                        data: JSON.stringify(food)
+                    });
+
+                    // 現在Templateメッセージに付加できるactionは4つまでのため、5つ以上の候補はカット。
+                    if (body.messages[0].template.actions.length == 4){
+                        break;
+                    }
+                }
+
+                var url = 'https://api.line.me/v2/bot/message/reply';
+                request({
+                    url: url,
+                    method: 'POST',
+                    headers: headers,
+                    body: body,
+                    json: true
+                });
+
+                // 質問した食品は確認中のリストに入れ、質問リストからは削除。
+                botMemory.confirmingFood = botMemory.toConfirmFoodList[0];
+                botMemory.toConfirmFoodList.splice(0, 1);
+
+                // Botの記憶に保存
+                memory.put(event.source.userId, botMemory);
+            }
         }
     }
 });
-
-/*
-if (foodList.length > 0){
-    for (var food of foodList){
-        console.log('Going to get nutrition of ' + food[0]);
-
-        shokuhin.getNutrition(food[0])
-        .then(
-            function(nutritionList){
-                if (nutritionList.length == 1){
-                    console.log('Going to confirm if the food is ' + nutritionList[0].food_name);
-
-                    // この食品で正しいか確認する。
-                    var headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                    }
-                    var body = {
-                        replyToken: event.replyToken,
-                        messages: [{
-                            type: 'template',
-                            altText: nutritionList[0].food_name.trim() + 'で合ってますか？',
-                            template: {
-                                type: 'confirm',
-                                text: nutritionList[0].food_name.trim() + 'で合ってますか？',
-                                actions: [
-                                    { type: 'postback', label: 'はい', data: JSON.stringify({ answer: 'yes', nutrition: nutritionList[0] }) },
-                                    { type: 'postback', label: 'いいえ', data: JSON.stringify({ answer: 'no'}) }
-                                ]
-                            }
-                        }]
-                    }
-                    var url = 'https://api.line.me/v2/bot/message/reply';
-                    request({
-                        url: url,
-                        method: 'POST',
-                        headers: headers,
-                        body: body,
-                        json: true
-                    });
-                } else if (nutritionList.length > 1){
-                    console.log('Going to ask which food the user had');
-
-                    // どの食品が正しいか確認する。
-                    var headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                    }
-                    var body = {
-                        replyToken: event.replyToken,
-                        messages: [{
-                            type: 'template',
-                            altText: 'どの食品ですか？',
-                            template: {
-                                type: 'buttons',
-                                text: 'どの食品ですか？',
-                                actions: []
-                            }
-                        }]
-                    }
-                    for (var nutrition of nutritionList){
-                        body.messages[0].template.actions.push({
-                            type: 'postback',
-                            label: nutrition.food_name,
-                            data: JSON.stringify({ answer: 'food', nutrition: nutrition })
-                        });
-                        if (body.messages[0].template.actions.length == 4){
-                            break;
-                        }
-                    }
-                    var url = 'https://api.line.me/v2/bot/message/reply';
-                    request({
-                        url: url,
-                        method: 'POST',
-                        headers: headers,
-                        body: body,
-                        json: true
-                    });
-                }
-            }
-        )
-    }
-}
-*/
