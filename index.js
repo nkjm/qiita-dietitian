@@ -35,7 +35,7 @@ app.post('/webhook', function(req, res, next){
     res.status(200).end();
     for (var event of req.body.events){
         if (event.type == 'message' && event.message.text){
-            var p = mecab.parse(event.message.text)
+            mecab.parse(event.message.text)
             .then(
                 function(response){
                     var foodList = [];
@@ -44,89 +44,103 @@ app.post('/webhook', function(req, res, next){
                             foodList.push(elem);
                         }
                     }
+                    var gotAllNutrition = [];
                     if (foodList.length > 0){
                         for (var food of foodList){
-                            console.log('Going to get nutrition of ' + food[0]);
-                            
-                            shokuhin.getNutrition(food[0])
-                            .then(
-                                function(nutritionList){
-                                    if (nutritionList.length == 1){
-                                        console.log('Going to confirm if the food is ' + nutritionList[0].food_name);
-
-                                        // この食品で正しいか確認する。
-                                        var headers = {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                                        }
-                                        var body = {
-                                            replyToken: event.replyToken,
-                                            messages: [{
-                                                type: 'template',
-                                                altText: nutritionList[0].food_name.trim() + 'で合ってますか？',
-                                                template: {
-                                                    type: 'confirm',
-                                                    text: nutritionList[0].food_name.trim() + 'で合ってますか？',
-                                                    actions: [
-                                                        { type: 'postback', label: 'はい', data: JSON.stringify({ answer: 'yes', nutrition: nutritionList[0] }) },
-                                                        { type: 'postback', label: 'いいえ', data: JSON.stringify({ answer: 'no'}) }
-                                                    ]
-                                                }
-                                            }]
-                                        }
-                                        var url = 'https://api.line.me/v2/bot/message/reply';
-                                        request({
-                                            url: url,
-                                            method: 'POST',
-                                            headers: headers,
-                                            body: body,
-                                            json: true
-                                        });
-                                    } else if (nutritionList.length > 1){
-                                        console.log('Going to ask which food the user had');
-
-                                        // どの食品が正しいか確認する。
-                                        var headers = {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                                        }
-                                        var body = {
-                                            replyToken: event.replyToken,
-                                            messages: [{
-                                                type: 'template',
-                                                altText: 'どの食品ですか？',
-                                                template: {
-                                                    type: 'buttons',
-                                                    text: 'どの食品ですか？',
-                                                    actions: []
-                                                }
-                                            }]
-                                        }
-                                        for (var nutrition of nutritionList){
-                                            body.messages[0].template.actions.push({
-                                                type: 'postback',
-                                                label: nutrition.food_name,
-                                                data: JSON.stringify({ answer: 'food', nutrition: nutrition })
-                                            });
-                                            if (body.messages[0].template.actions.length == 4){
-                                                break;
-                                            }
-                                        }
-                                        var url = 'https://api.line.me/v2/bot/message/reply';
-                                        request({
-                                            url: url,
-                                            method: 'POST',
-                                            headers: headers,
-                                            body: body,
-                                            json: true
-                                        });
-                                    }
-                                }
-                            )
+                            gotAllNutrition.push(shokuhin.getNutrition(food[0]));
                         }
+                        return Promise.all(gotAllNutrition);
                     }
+                }
+            ).then(
+                function(response){
+                    console.log(response);
                 }
             );
         }
     }
 });
+
+/*
+if (foodList.length > 0){
+    for (var food of foodList){
+        console.log('Going to get nutrition of ' + food[0]);
+
+        shokuhin.getNutrition(food[0])
+        .then(
+            function(nutritionList){
+                if (nutritionList.length == 1){
+                    console.log('Going to confirm if the food is ' + nutritionList[0].food_name);
+
+                    // この食品で正しいか確認する。
+                    var headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
+                    }
+                    var body = {
+                        replyToken: event.replyToken,
+                        messages: [{
+                            type: 'template',
+                            altText: nutritionList[0].food_name.trim() + 'で合ってますか？',
+                            template: {
+                                type: 'confirm',
+                                text: nutritionList[0].food_name.trim() + 'で合ってますか？',
+                                actions: [
+                                    { type: 'postback', label: 'はい', data: JSON.stringify({ answer: 'yes', nutrition: nutritionList[0] }) },
+                                    { type: 'postback', label: 'いいえ', data: JSON.stringify({ answer: 'no'}) }
+                                ]
+                            }
+                        }]
+                    }
+                    var url = 'https://api.line.me/v2/bot/message/reply';
+                    request({
+                        url: url,
+                        method: 'POST',
+                        headers: headers,
+                        body: body,
+                        json: true
+                    });
+                } else if (nutritionList.length > 1){
+                    console.log('Going to ask which food the user had');
+
+                    // どの食品が正しいか確認する。
+                    var headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
+                    }
+                    var body = {
+                        replyToken: event.replyToken,
+                        messages: [{
+                            type: 'template',
+                            altText: 'どの食品ですか？',
+                            template: {
+                                type: 'buttons',
+                                text: 'どの食品ですか？',
+                                actions: []
+                            }
+                        }]
+                    }
+                    for (var nutrition of nutritionList){
+                        body.messages[0].template.actions.push({
+                            type: 'postback',
+                            label: nutrition.food_name,
+                            data: JSON.stringify({ answer: 'food', nutrition: nutrition })
+                        });
+                        if (body.messages[0].template.actions.length == 4){
+                            break;
+                        }
+                    }
+                    var url = 'https://api.line.me/v2/bot/message/reply';
+                    request({
+                        url: url,
+                        method: 'POST',
+                        headers: headers,
+                        body: body,
+                        json: true
+                    });
+                }
+            }
+        )
+    }
+}
+*/
