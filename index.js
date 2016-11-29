@@ -55,6 +55,8 @@ app.post('/webhook', function(req, res, next){
                 }
             ).then(
                 function(responseList){
+                    console.log(responseList);
+                    
                     var botMemory = {
                         confirmedFoodList: [],
                         toConfirmFoodList: []
