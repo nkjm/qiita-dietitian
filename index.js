@@ -54,7 +54,7 @@ app.post('/webhook', function(req, res, next){
                         p.cancel();
                     }
                 }
-            ).all(
+            ).then(
                 function(response){
                     console.log(response);
                 }
