@@ -6,7 +6,8 @@ const LINE_CHANNEL_ACCESS_TOKEN = 'BfVeE9hrQON44TV3jC62dL79KB/657LJKj0NRVTLxfMJE
 // モジュールのインポート
 var express = require('express');
 var bodyParser = require('body-parser');
-var request = require('request'); // 追加
+var request = require('request');
+var mecab = require('mecabaas-client');
 var app = express();
 
 
@@ -32,7 +33,14 @@ app.get('/', function(req, res, next){
 app.post('/webhook', function(req, res, next){
     res.status(200).end();
     for (var event of req.body.events){
-        if (event.type == 'message' && event.message.text == 'ハロー'){
+        if (event.type == 'message' && event.message.text){
+            mecab.parse(event.message.text)
+            .then(
+                function(response){
+                    console.log(response);
+                }
+            );
+            /*
             var headers = {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
@@ -52,6 +60,7 @@ app.post('/webhook', function(req, res, next){
                 body: body,
                 json: true
             });
+            */
         }
     }
 });
