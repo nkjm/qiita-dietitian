@@ -49,7 +49,7 @@ app.post('/webhook', function(req, res, next){
                         for (var food of foodList){
                             gotAllNutrition.push(shokuhin.getNutrition(food[0]));
                         }
-                        return gotAllNutrition;
+                        return Promise.all(gotAllNutrition);
                     } else {
                         p.cancel();
                     }
