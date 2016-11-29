@@ -50,8 +50,6 @@ app.post('/webhook', function(req, res, next){
                             gotAllNutrition.push(shokuhin.getNutrition(food[0]));
                         }
                         return Promise.all(gotAllNutrition);
-                    } else {
-                        p.cancel();
                     }
                 }
             ).then(
