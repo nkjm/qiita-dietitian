@@ -46,6 +46,8 @@ app.post('/webhook', function(req, res, next){
                     }
                     if (foodList.length > 0){
                         for (var food of foodList){
+                            console.log('Going to get nutrition of ' + food[0]);
+                            
                             shokuhin.getNutrition(food[0])
                             .then(
                                 function(nutritionList){
@@ -61,10 +63,10 @@ app.post('/webhook', function(req, res, next){
                                             replyToken: event.replyToken,
                                             messages: [{
                                                 type: 'template',
-                                                altText: nutritionList[0].food_name + 'でよろしいですか？',
+                                                altText: nutritionList[0].food_name.trim() + 'で合ってますか？',
                                                 template: {
                                                     type: 'confirm',
-                                                    text: nutritionList[0].food_name + 'でよろしいですか？',
+                                                    text: nutritionList[0].food_name.trim() + 'で合ってますか？',
                                                     actions: [
                                                         { type: 'postback', label: 'はい', data: JSON.stringify({ answer: 'yes', nutrition: nutritionList[0] }) },
                                                         { type: 'postback', label: 'いいえ', data: JSON.stringify({ answer: 'no'}) }
