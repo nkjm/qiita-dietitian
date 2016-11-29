@@ -68,12 +68,9 @@ app.post('/webhook', function(req, res, next){
                             botMemory.confirmedFoodList.push(nutritionList[0]);
                         } else if (nutritionList.length > 1){
                             // 複数の該当食品が見つかったのでユーザーに確認するリストに入れる。
-                            console.log(nutritionList);
-                            botMemory.toConfirmFoodList.concat(nutritionList);
+                            botMemory.toConfirmFoodList = botMemory.toConfirmFoodList.concat(nutritionList);
                         }
                     }
-
-                    console.log(botMemory);
 
                     // Botの記憶に保存
                     memory.put(event.source.userId, botMemory);
