@@ -47,37 +47,81 @@ app.post('/webhook', function(req, res, next){
                     var gotAllNutrition = [];
                     if (foodList.length > 0){
                         for (var food of foodList){
-                            gotAllNutrition.push(shokuhin.getNutrition(food[0]));
+                            shokuhin.getNutrition(food[0])
+                            .then(
+                                function(nutritionList){
+                                    if (nutritionList.length == 1){
+                                        // この食品で正しいか確認する。
+                                        var headers = {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
+                                        }
+                                        var body = {
+                                            replyToken: event.replyToken,
+                                            messages: [{
+                                                type: 'template',
+                                                altText: nutritionList[0].food_name + 'でよろしいですか？',
+                                                template: {
+                                                    type: 'confirm',
+                                                    text: nutritionList[0].food_name + 'でよろしいですか？',
+                                                    actions: [
+                                                        { type: 'postback', label: 'はい', data: { answer: 'yes', nutrition: JSON.strigify(nutritionList[0])} },
+                                                        { type: 'postback', label: 'いいえ', data: { answer: 'no'} }
+                                                    ]
+                                                }
+                                            }]
+                                        }
+                                        var url = 'https://api.line.me/v2/bot/message/reply';
+                                        request({
+                                            url: url,
+                                            method: 'POST',
+                                            headers: headers,
+                                            body: body,
+                                            json: true
+                                        });
+                                    } else if (nutritionList.length > 1){
+                                        // どの食品が正しいか確認する。
+                                        var headers = {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
+                                        }
+                                        var body = {
+                                            replyToken: event.replyToken,
+                                            messages: [{
+                                                type: 'template',
+                                                altText: 'どの食品ですか？',
+                                                template: {
+                                                    type: 'buttons',
+                                                    text: 'どの食品ですか？',
+                                                    actions: []
+                                                }
+                                            }]
+                                        }
+                                        for (var nutrition of nutritionList){
+                                            body.messages[0].template.actions.push({
+                                                type: 'postback',
+                                                label: nutrition.food_name,
+                                                data: { answer: 'food', nutrition: JSON.strigify(nutrition) }
+                                            });
+                                            if (body.messages[0].template.actions.length == 4){
+                                                break;
+                                            }
+                                        }
+                                        var url = 'https://api.line.me/v2/bot/message/reply';
+                                        request({
+                                            url: url,
+                                            method: 'POST',
+                                            headers: headers,
+                                            body: body,
+                                            json: true
+                                        });
+                                    }
+                                }
+                            )
                         }
-                        return Promise.all(gotAllNutrition);
                     }
                 }
-            ).then(
-                function(response){
-                    console.log(response);
-                }
             );
-            /*
-            var headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-            }
-            var body = {
-                replyToken: event.replyToken,
-                messages: [{
-                    type: 'text',
-                    text: 'こんにちはー'
-                }]
-            }
-            var url = 'https://api.line.me/v2/bot/message/reply';
-            request({
-                url: url,
-                method: 'POST',
-                headers: headers,
-                body: body,
-                json: true
-            });
-            */
         }
     }
 });
