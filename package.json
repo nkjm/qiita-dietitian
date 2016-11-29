@@ -12,6 +12,7 @@
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "mecabaas-client": "^1.0.2",
+    "memory-cache": "^0.1.6",
     "request": "^2.79.0",
     "shokuhin-db": "^1.0.2"
   }
