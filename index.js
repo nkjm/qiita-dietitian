@@ -65,7 +65,7 @@ app.post('/webhook', function(req, res, next){
                                                     type: 'confirm',
                                                     text: nutritionList[0].food_name + 'でよろしいですか？',
                                                     actions: [
-                                                        { type: 'postback', label: 'はい', data: { answer: 'yes', nutrition: JSON.strigify(nutritionList[0])} },
+                                                        { type: 'postback', label: 'はい', data: { answer: 'yes', nutrition: JSON.stringify(nutritionList[0])} },
                                                         { type: 'postback', label: 'いいえ', data: { answer: 'no'} }
                                                     ]
                                                 }
@@ -101,7 +101,7 @@ app.post('/webhook', function(req, res, next){
                                             body.messages[0].template.actions.push({
                                                 type: 'postback',
                                                 label: nutrition.food_name,
-                                                data: { answer: 'food', nutrition: JSON.strigify(nutrition) }
+                                                data: { answer: 'food', nutrition: JSON.stringify(nutrition) }
                                             });
                                             if (body.messages[0].template.actions.length == 4){
                                                 break;
