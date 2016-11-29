@@ -35,7 +35,7 @@ module.exports = class dietitian {
             'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
         }
         var body = {
-            replyToken: event.replyToken,
+            replyToken: replyToken,
             messages: [{
                 type: 'template',
                 altText: 'どの食品が最も近いですか？',
