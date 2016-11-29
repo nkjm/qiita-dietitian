@@ -72,6 +72,8 @@ app.post('/webhook', function(req, res, next){
                         }
                     }
 
+                    console.log(botMemory);
+
                     // Botの記憶に保存
                     memory.put(event.source.userId, botMemory);
 
@@ -93,7 +95,7 @@ app.post('/webhook', function(req, res, next){
                             replyToken: event.replyToken,
                             messages: [{
                                 type: 'text',
-                                text: 'カロリーは合計' + totalCalorie + 'になります！'
+                                text: 'カロリーは合計' + totalCalorie + 'kcalです！'
                             }]
                         }
                         var url = 'https://api.line.me/v2/bot/message/reply';
