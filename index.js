@@ -10,6 +10,7 @@ var request = require('request');
 var mecab = require('mecabaas-client');
 var shokuhin = require('shokuhin-db');
 var memory = require('memory-cache');
+var dietitian = require('./dietitian');
 var app = express();
 
 
@@ -74,75 +75,11 @@ app.post('/webhook', function(req, res, next){
                     }
 
                     if (botMemory.toConfirmFoodList.length == 0 && botMemory.confirmedFoodList.length > 0){
-                        console.log('Going to reply the total calorie.');
-
                         // 確認事項はないので、確定した食品のカロリーの合計を返信して終了。
-                        var foodListStr = "";
-                        var totalCalorie = 0;
-                        for (var food of botMemory.confirmedFoodList){
-                            totalCalorie += food.calorie;
-                        }
-
-                        var headers = {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                        }
-                        var body = {
-                            replyToken: event.replyToken,
-                            messages: [{
-                                type: 'text',
-                                text: 'カロリーは合計' + totalCalorie + 'kcalです！'
-                            }]
-                        }
-                        var url = 'https://api.line.me/v2/bot/message/reply';
-                        request({
-                            url: url,
-                            method: 'POST',
-                            headers: headers,
-                            body: body,
-                            json: true
-                        });
+                        dietitian.replyTotalCalorie(event.replyToken, botMemory.confirmedFoodList);
                     } else if (botMemory.toConfirmFoodList.length > 0){
-                        console.log('Going to ask which food the user had');
-
                         // どの食品が正しいか確認する。
-                        var headers = {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                        }
-                        var body = {
-                            replyToken: event.replyToken,
-                            messages: [{
-                                type: 'template',
-                                altText: 'どの食品が最も近いですか？',
-                                template: {
-                                    type: 'buttons',
-                                    text: 'どの食品が最も近いですか？',
-                                    actions: []
-                                }
-                            }]
-                        }
-                        for (var food of botMemory.toConfirmFoodList[0]){
-                            body.messages[0].template.actions.push({
-                                type: 'postback',
-                                label: food.food_name,
-                                data: JSON.stringify(food)
-                            });
-
-                            // 現在Templateメッセージに付加できるactionは4つまでのため、5つ以上の候補はカット。
-                            if (body.messages[0].template.actions.length == 4){
-                                break;
-                            }
-                        }
-
-                        var url = 'https://api.line.me/v2/bot/message/reply';
-                        request({
-                            url: url,
-                            method: 'POST',
-                            headers: headers,
-                            body: body,
-                            json: true
-                        });
+                        dietitian.askWhichFood(event.replyToken, botMemory.toConfirmFoodList[0]);
 
                         // 質問した食品は確認中のリストに入れ、質問リストからは削除。
                         botMemory.confirmingFood = botMemory.toConfirmFoodList[0];
@@ -160,78 +97,15 @@ app.post('/webhook', function(req, res, next){
             // 記憶を取り出す。
             var botMemory = memory.get(event.source.userId);
 
+            // 回答された食品を確定リストに追加
             botMemory.confirmedFoodList.push(answeredFood);
 
             if (botMemory.toConfirmFoodList.length == 0 && botMemory.confirmedFoodList.length > 0){
-                console.log('Going to reply the total calorie.');
-
                 // 確認事項はないので、確定した食品のカロリーの合計を返信して終了。
-                var foodListStr = "";
-                var totalCalorie = 0;
-                for (var food of botMemory.confirmedFoodList){
-                    totalCalorie += food.calorie;
-                }
-
-                var headers = {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                }
-                var body = {
-                    replyToken: event.replyToken,
-                    messages: [{
-                        type: 'text',
-                        text: 'カロリーは合計' + totalCalorie + 'kcalです！'
-                    }]
-                }
-                var url = 'https://api.line.me/v2/bot/message/reply';
-                request({
-                    url: url,
-                    method: 'POST',
-                    headers: headers,
-                    body: body,
-                    json: true
-                });
+                dietitian.replyTotalCalorie(event.replyToken, botMemory.confirmedFoodList);
             } else if (botMemory.toConfirmFoodList.length > 0){
-                console.log('Going to ask which food the user had');
-
                 // どの食品が正しいか確認する。
-                var headers = {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + LINE_CHANNEL_ACCESS_TOKEN
-                }
-                var body = {
-                    replyToken: event.replyToken,
-                    messages: [{
-                        type: 'template',
-                        altText: 'どの食品が最も近いですか？',
-                        template: {
-                            type: 'buttons',
-                            text: 'どの食品が最も近いですか？',
-                            actions: []
-                        }
-                    }]
-                }
-                for (var food of botMemory.toConfirmFoodList[0]){
-                    body.messages[0].template.actions.push({
-                        type: 'postback',
-                        label: food.food_name,
-                        data: JSON.stringify(food)
-                    });
-
-                    // 現在Templateメッセージに付加できるactionは4つまでのため、5つ以上の候補はカット。
-                    if (body.messages[0].template.actions.length == 4){
-                        break;
-                    }
-                }
-
-                var url = 'https://api.line.me/v2/bot/message/reply';
-                request({
-                    url: url,
-                    method: 'POST',
-                    headers: headers,
-                    body: body,
-                    json: true
-                });
+                dietitian.askWhichFood(event.replyToken, botMemory.toConfirmFoodList[0]);
 
                 // 質問した食品は確認中のリストに入れ、質問リストからは削除。
                 botMemory.confirmingFood = botMemory.toConfirmFoodList[0];
