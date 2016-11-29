@@ -57,7 +57,8 @@ app.post('/webhook', function(req, res, next){
                 function(responseList){
                     var botMemory = {
                         confirmedFoodList: [],
-                        toConfirmFoodList: []
+                        toConfirmFoodList: [],
+                        confirmingFood: null
                     }
                     for (var nutritionList of responseList){
                         if (nutritionList.length == 0){
@@ -68,12 +69,9 @@ app.post('/webhook', function(req, res, next){
                             botMemory.confirmedFoodList.push(nutritionList[0]);
                         } else if (nutritionList.length > 1){
                             // 複数の該当食品が見つかったのでユーザーに確認するリストに入れる。
-                            botMemory.toConfirmFoodList = botMemory.toConfirmFoodList.concat(nutritionList);
+                            botMemory.toConfirmFoodList.push(nutritionList);
                         }
                     }
-
-                    // Botの記憶に保存
-                    memory.put(event.source.userId, botMemory);
 
                     if (botMemory.toConfirmFoodList.length == 0 && botMemory.confirmedFoodList.length > 0){
                         console.log('Going to reply the total calorie.');
@@ -104,6 +102,9 @@ app.post('/webhook', function(req, res, next){
                             body: body,
                             json: true
                         });
+
+                        // Botの記憶に保存
+                        memory.put(event.source.userId, botMemory);
                     } else if (botMemory.toConfirmFoodList.length > 0){
                         console.log('Going to ask which food the user had');
 
@@ -124,7 +125,7 @@ app.post('/webhook', function(req, res, next){
                                 }
                             }]
                         }
-                        for (var food of botMemory.toConfirmFoodList){
+                        for (var food of botMemory.toConfirmFoodList[0]){
                             body.messages[0].template.actions.push({
                                 type: 'postback',
                                 label: food.food_name,
@@ -136,6 +137,7 @@ app.post('/webhook', function(req, res, next){
                                 break;
                             }
                         }
+
                         var url = 'https://api.line.me/v2/bot/message/reply';
                         request({
                             url: url,
@@ -144,6 +146,13 @@ app.post('/webhook', function(req, res, next){
                             body: body,
                             json: true
                         });
+
+                        // 質問した食品は確認中のリストに入れ、質問リストからは削除。
+                        botMemory.confirmingFood = botMemory.toConfirmFoodList[0];
+                        botMemory.toConfirmFoodList.splice(0, 1);
+
+                        // Botの記憶に保存
+                        memory.put(event.source.userId, botMemory);
                     }
                 }
             );
