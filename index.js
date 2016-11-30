@@ -1,4 +1,4 @@
-const APIAI_CLIENT_ACCESS_TOKEN = '77fd36012e0a47f88fe3fd12a173193b';
+const APIAI_CLIENT_ACCESS_TOKEN = process.env.APIAI_CLIENT_ACCESS_TOKEN;
 
 // -----------------------------------------------------------------------------
 // モジュールのインポート
