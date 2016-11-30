@@ -1,3 +1,5 @@
+const APIAI_CLIENT_ACCESS_TOKEN = '77fd36012e0a47f88fe3fd12a173193b';
+
 // -----------------------------------------------------------------------------
 // モジュールのインポート
 var express = require('express');
@@ -5,6 +7,7 @@ var bodyParser = require('body-parser');
 var mecab = require('mecabaas-client');
 var shokuhin = require('shokuhin-db');
 var memory = require('memory-cache');
+var apiai = require('apiai');
 var dietitian = require('./dietitian');
 var app = express();
 
@@ -32,8 +35,26 @@ app.post('/webhook', function(req, res, next){
     res.status(200).end();
     for (var event of req.body.events){
         if (event.type == 'message' && event.message.text){
-            mecab.parse(event.message.text)
-            .then(
+
+            var aiInstance = apiai(APIAI_CLIENT_ACCESS_TOKEN);
+            var aiRequest = aiInstance.textRequest(event.message.text);
+            var p = new Promise();
+
+            aiRequest.on('response', function(response){
+                console.log(response.result.action);
+                switch (response.result.action) {
+                    case 'recommendation':
+                        console.log('Intent is ' + response.result.action);
+                        break;
+                    default:
+                        console.log('Intent not found.');
+                        p = mecab.parse(event.message.text);
+                        break;
+                }
+            });
+            aiRequest.end();
+
+            p.then(
                 function(response){
                     var foodList = [];
                     for (var elem of response){
