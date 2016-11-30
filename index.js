@@ -38,9 +38,8 @@ app.post('/webhook', function(req, res, next){
 
             var aiInstance = apiai(APIAI_CLIENT_ACCESS_TOKEN);
             var aiRequest = aiInstance.textRequest(event.message.text);
-            var p = new Promise();
 
-            aiRequest.on('response', function(response){
+            var p = aiRequest.on('response', function(response){
                 console.log(response.result.action);
                 switch (response.result.action) {
                     case 'recommendation':
@@ -48,7 +47,7 @@ app.post('/webhook', function(req, res, next){
                         break;
                     default:
                         console.log('Intent not found.');
-                        p = mecab.parse(event.message.text);
+                        return mecab.parse(event.message.text);
                         break;
                 }
             });
