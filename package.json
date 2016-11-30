@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "apiai": "^3.0.3",
+    "bluebird": "^3.4.6",
     "body-parser": "^1.15.2",
     "express": "^4.14.0",
     "mecabaas-client": "^1.0.2",

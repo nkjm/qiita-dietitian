@@ -9,14 +9,21 @@ var shokuhin = require('shokuhin-db');
 var memory = require('memory-cache');
 var apiai = require('apiai');
 var uuid = require('node-uuid');
+var Promise = require('bluebird');
 var dietitian = require('./dietitian');
 var app = express();
 
 
 // -----------------------------------------------------------------------------
 // ミドルウェア設定
+
 // リクエストのbodyをJSONとしてパースし、req.bodyからそのデータにアクセス可能にします。
 app.use(bodyParser.json());
+
+// Promiseチェーンのキャンセルを有効にします。
+Promise.config({
+    cancellation: true
+});
 
 // -----------------------------------------------------------------------------
 // Webサーバー設定
@@ -47,12 +54,13 @@ app.post('/webhook', function(req, res, next){
                 aiRequest.end();
             });
 
-            gotIntent.then(
+            var main = gotIntent.then(
                 function(response){
                     console.log(response.result.action);
                     switch (response.result.action) {
                         case 'recommendation':
                             console.log('Intent is ' + response.result.action);
+                            main.cancel();
                             break;
                         default:
                             console.log('Intent not found.');
