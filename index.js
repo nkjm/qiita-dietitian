@@ -8,6 +8,7 @@ var mecab = require('mecabaas-client');
 var shokuhin = require('shokuhin-db');
 var memory = require('memory-cache');
 var apiai = require('apiai');
+var uuid = require('node-uuid');
 var dietitian = require('./dietitian');
 var app = express();
 
