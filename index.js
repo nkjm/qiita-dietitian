@@ -39,21 +39,27 @@ app.post('/webhook', function(req, res, next){
             var aiInstance = apiai(APIAI_CLIENT_ACCESS_TOKEN);
             var aiRequest = aiInstance.textRequest(event.message.text);
 
-            var p = aiRequest.on('response', function(response){
-                console.log(response.result.action);
-                switch (response.result.action) {
-                    case 'recommendation':
-                        console.log('Intent is ' + response.result.action);
-                        break;
-                    default:
-                        console.log('Intent not found.');
-                        return mecab.parse(event.message.text);
-                        break;
-                }
+            var gotIntent = new Promise(function(resolve, reject){
+                aiRequest.on('response', function(response){
+                    resolve(response);
+                });
+                aiRequest.end();
             });
-            aiRequest.end();
 
-            p.then(
+            gotIntent.then(
+                function(response){
+                    console.log(response.result.action);
+                    switch (response.result.action) {
+                        case 'recommendation':
+                            console.log('Intent is ' + response.result.action);
+                            break;
+                        default:
+                            console.log('Intent not found.');
+                            return mecab.parse(event.message.text);
+                            break;
+                    }
+                }
+            ).then(
                 function(response){
                     var foodList = [];
                     for (var elem of response){
