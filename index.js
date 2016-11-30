@@ -44,9 +44,11 @@ app.post('/webhook', function(req, res, next){
     for (var event of req.body.events){
         if (event.type == 'message' && event.message.text){
 
+            /*
+             * api.aiでメッセージを処理。レスポンスとしてgotIntentというPromiseを返すように実装。
+             */
             var aiInstance = apiai(APIAI_CLIENT_ACCESS_TOKEN);
             var aiRequest = aiInstance.textRequest(event.message.text, {sessionId: uuid.v1()});
-
             var gotIntent = new Promise(function(resolve, reject){
                 aiRequest.on('response', function(response){
                     resolve(response);
@@ -54,16 +56,22 @@ app.post('/webhook', function(req, res, next){
                 aiRequest.end();
             });
 
+            /*
+             * api.aiからレスポンスが帰ってきたらこの処理を開始。
+             */
             var main = gotIntent.then(
                 function(response){
                     console.log(response.result.action);
                     switch (response.result.action) {
                         case 'recommendation':
-                            console.log('Intent is ' + response.result.action);
+                            // 意図は「お薦めの食事」だと特定。お薦めの食事を回答します。
+                            dietitian.replyRecommendation(event.replyToken);
+
+                            // ここで処理は終了
                             main.cancel();
                             break;
                         default:
-                            console.log('Intent not found.');
+                            // 意図が特定されなかった場合は食事の報告だと仮定して形態素解析処理へ移る。
                             return mecab.parse(event.message.text);
                             break;
                     }
