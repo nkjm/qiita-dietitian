@@ -37,7 +37,7 @@ app.post('/webhook', function(req, res, next){
         if (event.type == 'message' && event.message.text){
 
             var aiInstance = apiai(APIAI_CLIENT_ACCESS_TOKEN);
-            var aiRequest = aiInstance.textRequest(event.message.text);
+            var aiRequest = aiInstance.textRequest(event.message.text, {sessionId: uuid.vi1()});
 
             var gotIntent = new Promise(function(resolve, reject){
                 aiRequest.on('response', function(response){
